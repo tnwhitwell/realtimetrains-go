@@ -3,6 +3,7 @@ package rtt
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -12,29 +13,34 @@ import (
 func Request(url string) (SearchResponse, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%v/%v", baseURL, url), nil)
 	if err != nil {
-		log.Fatal("NewRequest: ", err)
-		return SearchResponse{}, nil
+		log.Print("NewRequest: ", err)
+		return SearchResponse{}, err
 	}
 	username, ok := os.LookupEnv("RTT_USER")
 	if !ok {
-		log.Fatal("RTT_USER was not set")
+		log.Print("RTT_USER was not set")
+		return SearchResponse{}, err
 	}
 	pass, ok := os.LookupEnv("RTT_PASS")
 	if !ok {
-		log.Fatal("RTT_PASS was not set")
+		log.Print("RTT_PASS was not set")
+		return SearchResponse{}, err
 	}
 	req.SetBasicAuth(username, pass)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("Do: ", err)
-		return SearchResponse{}, nil
+		log.Print("Do: ", err)
+		return SearchResponse{}, err
 	}
 	defer resp.Body.Close()
 	var sr SearchResponse
-
+	if resp.StatusCode != 200 {
+		b, _ := ioutil.ReadAll(resp.Body)
+		log.Print("Non-200 response: ", string(b))
+		return SearchResponse{}, fmt.Errorf(string(b))
+	}
 	if err := json.NewDecoder(resp.Body).Decode(&sr); err != nil {
-		log.Println(err)
 		return SearchResponse{}, err
 	}
 	return sr, nil
