@@ -42,7 +42,7 @@ func Request(url string) (SearchResponse, error) {
 
 func Search(from string, to string, dt time.Time) (SearchResponse, error) {
 	searchstr := fmt.Sprintf("/search/%v/to/%v/%v/%v/%v/%v%v",
-		from, to, dt.Year(), int(dt.Month()), dt.Day(), dt.Hour(), dt.Minute())
+		from, to, dt.Year(), int(dt.Month()), dt.Day(), fmt.Sprintf("%02d", dt.Hour()), fmt.Sprintf("%02d", dt.Minute()))
 	log.Println(searchstr)
 	sr, err := Request(searchstr)
 	return sr, err
